@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/walle/fval"
@@ -157,5 +158,95 @@ func TestDirExistsOrCreateError(t *testing.T) {
 	}
 	if err == nil {
 		t.Errorf("Error should not have been nil")
+	}
+}
+
+func TestDirPurgeAndCreate(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "go-arg-test")
+	if err != nil {
+		t.Errorf("TempDir error")
+		return
+	}
+	defer os.RemoveAll(tmpDir)
+
+	path := filepath.Join(tmpDir, "test")
+	os.Mkdir(path, 0766)
+	fpath := filepath.Join(path, "test2")
+	os.Create(fpath)
+	if !fval.FileExists(fpath) {
+		t.Errorf("File %s does not exist", fpath)
+	}
+	ok, err := fval.DirPurgeAndCreate(path, 0766)
+	if !ok {
+		t.Errorf("Directory %s was not deleted and created", path)
+	}
+	if err != nil {
+		t.Errorf("Error occured %s", err)
+	}
+	if fval.FileExists(fpath) {
+		t.Errorf("File %s exist", fpath)
+	}
+}
+
+func TestDirPurgeAndCreateNoDir(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "go-arg-test")
+	if err != nil {
+		t.Errorf("TempDir error")
+		return
+	}
+	defer os.RemoveAll(tmpDir)
+
+	path := filepath.Join(tmpDir, "test")
+	ok, err := fval.DirPurgeAndCreate(path, 0766)
+	if ok {
+		t.Errorf("Should not get ok")
+	}
+	if err == nil {
+		t.Errorf("Should not get no error")
+	}
+	if fval.DirExists(path) {
+		t.Errorf("Directory %s should not exist", path)
+	}
+}
+
+func TestDirPurgeAndCreateError(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "go-arg-test")
+	if err != nil {
+		t.Errorf("TempDir error")
+		return
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Use same way of testing error to os.RemoveAll as stdlib
+
+	// Determine if we should run the following test.
+	testit := true
+	if runtime.GOOS == "windows" {
+		// Chmod is not supported under windows.
+		testit = false
+	} else {
+		// Test fails as root.
+		testit = os.Getuid() != 0
+	}
+	if testit {
+		path := filepath.Join(tmpDir, "test")
+		fpath := filepath.Join(path, ".file")
+		os.Mkdir(path, 0766)
+		os.Create(fpath)
+
+		if err = os.Chmod(path, 0); err != nil {
+			t.Fatalf("Chmod %q 0: %s", path, err)
+		}
+
+		ok, err := fval.DirPurgeAndCreate(path, 0766)
+		if ok {
+			t.Errorf("Directory should not have been created")
+		}
+		if err == nil {
+			t.Errorf("Error should not have been nil")
+		}
+		if fval.FileExists(fpath) {
+			t.Errorf("File %s should not exist", fpath)
+		}
 	}
 }

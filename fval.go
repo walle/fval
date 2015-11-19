@@ -3,13 +3,14 @@
 package fval
 
 import (
+	"fmt"
 	"os"
 )
 
 // FileExists returns true if a file exists at path, false otherwise.
 func FileExists(path string) bool {
 	exists, f := exists(path)
-	if exists {
+	if exists && f != nil {
 		if !f.IsDir() {
 			return true
 		}
@@ -50,6 +51,23 @@ func DirExistsOrCreate(path string, perm os.FileMode) (bool, error) {
 	}
 
 	return DirExists(path), nil
+}
+
+// DirPurgeAndCreate removes directory at path with all sub directories and files
+// then creates a new empty directory at path.
+// Returns ok if the directory is created. Returns error if no dir exists at path
+// or if something goes wrong when deleting files or creating directory.
+func DirPurgeAndCreate(path string, perm os.FileMode) (bool, error) {
+	if !DirExists(path) {
+		return false, fmt.Errorf("fval: trying to purge and create non existing dir")
+	}
+
+	err := os.RemoveAll(path)
+	if err != nil {
+		return false, err
+	}
+
+	return DirExistsOrCreate(path, perm)
 }
 
 // exists returns true if a file or directory exists at path, false otherwise.
