@@ -11,11 +11,7 @@ import (
 )
 
 func TestFileExists(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	path := filepath.Join(tmpDir, "test")
@@ -39,11 +35,7 @@ func TestFileExists(t *testing.T) {
 }
 
 func TestDirExists(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	path := filepath.Join(tmpDir, "test")
@@ -67,11 +59,7 @@ func TestDirExists(t *testing.T) {
 }
 
 func TestFileOrDirExists(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	fpath := filepath.Join(tmpDir, "test.txt")
@@ -98,11 +86,7 @@ func TestFileOrDirExists(t *testing.T) {
 }
 
 func TestDirExistsOrCreate(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	path := filepath.Join(tmpDir, "test1", "test2", "test3")
@@ -141,11 +125,7 @@ func TestDirExistsOrCreate(t *testing.T) {
 }
 
 func TestDirExistsOrCreateError(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	path := filepath.Join(tmpDir, "test")
@@ -162,11 +142,7 @@ func TestDirExistsOrCreateError(t *testing.T) {
 }
 
 func TestDirPurgeAndCreate(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	path := filepath.Join(tmpDir, "test")
@@ -189,11 +165,7 @@ func TestDirPurgeAndCreate(t *testing.T) {
 }
 
 func TestDirPurgeAndCreateNoDir(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	path := filepath.Join(tmpDir, "test")
@@ -210,11 +182,7 @@ func TestDirPurgeAndCreateNoDir(t *testing.T) {
 }
 
 func TestDirPurgeAndCreateError(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "go-arg-test")
-	if err != nil {
-		t.Errorf("TempDir error")
-		return
-	}
+	tmpDir := createTmpDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	// Use same way of testing error to os.RemoveAll as stdlib
@@ -234,7 +202,7 @@ func TestDirPurgeAndCreateError(t *testing.T) {
 		os.Mkdir(path, 0766)
 		os.Create(fpath)
 
-		if err = os.Chmod(path, 0); err != nil {
+		if err := os.Chmod(path, 0); err != nil {
 			t.Fatalf("Chmod %q 0: %s", path, err)
 		}
 
@@ -249,4 +217,12 @@ func TestDirPurgeAndCreateError(t *testing.T) {
 			t.Errorf("File %s should not exist", fpath)
 		}
 	}
+}
+
+func createTmpDir(t *testing.T) string {
+	tmpDir, err := ioutil.TempDir("", "fval-test")
+	if err != nil {
+		t.Fatalf("TempDir error: %s", err)
+	}
+	return tmpDir
 }
